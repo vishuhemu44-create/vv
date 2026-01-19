@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Movie Recommendation System</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* ================= BACKGROUND ================= */
+body {
+    min-height: 100vh;
+    background: url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba")
+        no-repeat center/cover;
+    animation: zoom 20s infinite alternate;
+    color: #e5e7eb;
+}
+
+@keyframes zoom {
+    from { background-size: 100%; }
+    to { background-size: 110%; }
+}
+
+/* Dark overlay */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: -1;
+}
+
+/* ================= PAGES ================= */
+.page1, .page2 {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.page2 {
+    display: none;
+}
+
+/* ================= CARD ================= */
+.card {
+    background: rgba(17,24,39,0.95);
+    padding: 30px;
+    width: 380px;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-top: 12px;
+}
+
+select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border-radius: 10px;
+    border: none;
+}
+
+select {
+    background: #020617;
+    color: #fff;
+}
+
+button {
+    margin-top: 18px;
+    background: #22c55e;
+    color: #022c22;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #16a34a;
+}
+
+/* ================= MOVIE GRID ================= */
+.result {
+    margin-top: 25px;
+}
+
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.movie-card {
+    height: 170px;
+    border-radius: 15px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    padding: 10px;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    transition: transform 0.3s;
+}
+
+.movie-card:hover {
+    transform: scale(1.08);
+}
+
+.movie-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    border-radius: 15px;
+}
+
+.movie-card span {
+    position: relative;
+    z-index: 1;
+    font-weight: bold;
+}
+
+/* ================= PAGE 2 ================= */
+.details {
+    max-width: 700px;
+    background: rgba(15,23,42,0.95);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+.details h1 {
+    margin-bottom: 10px;
+}
+
+.back-btn {
+    margin-top: 20px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: #22c55e;
+    font-weight: bold;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="page1" id="page1">
+    <div class="card">
+        <h2>🎬 Movie Recommendation</h2>
+
+        <label>Time Duration</label>
+        <select id="duration">
+            <option value="short">Less than 2 hours</option>
+            <option value="medium">2 - 3 hours</option>
+            <option value="long">More than 3 hours</option>
+        </select>
+
+        <label>Language</label>
+        <select id="language">
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Tamil</option>
+            <option>Telugu</option>
+        </select>
+
+        <label>Subscription</label>
+        <select id="subscription">
+            <option>Free</option>
+            <option>Premium</option>
+        </select>
+
+        <button onclick="showMovies()">Get Recommendation</button>
+
+        <div class="result" id="result"></div>
+    </div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="page2" id="page2">
+    <div class="details">
+        <h1 id="movieTitle"></h1>
+        <p id="movieInfo"></p>
+        <button class="back-btn" onclick="goBack()">⬅ Back</button>
+    </div>
+</div>
+
+<script>
+const movies = [
+    {name:"Inception", lang:"English", time:"medium", sub:"Free", img:"https://via.placeholder.com/300?text=Inception"},
+    {name:"Interstellar", lang:"English", time:"long", sub:"Premium", img:"https://via.placeholder.com/300?text=Interstellar"},
+    {name:"3 Idiots", lang:"Hindi", time:"medium", sub:"Free", img:"https://via.placeholder.com/300?text=3+Idiots"},
+    {name:"Jawan", lang:"Hindi", time:"medium", sub:"Premium", img:"https://via.placeholder.com/300?text=Jawan"},
+    {name:"Vikram", lang:"Tamil", time:"medium", sub:"Premium", img:"https://via.placeholder.com/300?text=Vikram"},
+    {name:"RRR", lang:"Telugu", time:"long", sub:"Premium", img:"https://via.placeholder.com/300?text=RRR"}
+];
+
+function showMovies() {
+    const lang = document.getElementById("language").value;
+    const time = document.getElementById("duration").value;
+    const sub = document.getElementById("subscription").value;
+    const result = document.getElementById("result");
+
+    const filtered = movies.filter(m =>
+        m.lang === lang &&
+        m.time === time &&
+        (sub === "Premium" || m.sub === "Free")
+    );
+
+    if (filtered.length === 0) {
+        result.innerHTML = "<p>No movies found</p>";
+        return;
+    }
+
+    result.innerHTML = `
+        <div class="movie-grid">
+        ${filtered.map(m => `
+            <div class="movie-card"
+                 style="background-image:url('${m.img}')"
+                 onclick="openMovie('${m.name}','${m.lang}','${m.sub}')">
+                <span>${m.name}</span>
+            </div>
+        `).join("")}
+        </div>
+    `;
+}
+
+function openMovie(name, lang, sub) {
+    document.getElementById("page1").style.display = "none";
+    document.getElementById("page2").style.display = "flex";
+    document.getElementById("movieTitle").innerText = name;
+    document.getElementById("movieInfo").innerText =
+        `Language: ${lang} | Subscription: ${sub}`;
+}
+
+function goBack() {
+    document.getElementById("page2").style.display = "none";
+    document.getElementById("page1").style.display = "flex";
+}
+</script>
+
+</body>
+</html>
